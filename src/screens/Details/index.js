@@ -1,35 +1,33 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 
-import { View, Text, StyleSheet, Button } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { View, Text, SafeAreaView, ScrollView } from 'react-native';
+import { api } from '../../services/api';
+
+import { styles } from './style';
+import { Header } from '../../components/Header';
 
 export const Details = () => {
-  const navigation = useNavigation();
+  const [articlesData, setArticlesData] = useState([]);
+
+  useEffect(() => {
+    api.get('/articles').then(res => {
+      setArticlesData(res.data);
+    });
+  }, []);
 
   return (
     <View style={styles.container}>
-      <Text> Details</Text>
-      <Button
-        title="Go to Details - Push"
-        onPress={() => navigation.push('Details')}
-      />
-      <Button
-        title="Go to Home - Navigate"
-        onPress={() => navigation.navigate('Home')}
-      />
-      <Button title="Go back" onPress={() => navigation.goBack()} />
-      <Button
-        title="Go to First Screen"
-        onPress={() => navigation.popToTop()}
-      />
+      <SafeAreaView />
+      <Header />
+      <View style={styles.content}>
+        <ScrollView>
+          <View style={styles.content}>
+            {articlesData.map((i, k) => (
+              <Text key={k}>{i.title}</Text>
+            ))}
+          </View>
+        </ScrollView>
+      </View>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

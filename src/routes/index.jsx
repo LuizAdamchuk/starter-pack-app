@@ -3,12 +3,11 @@ import React from 'react';
 import { View, ActivityIndicator } from 'react-native';
 
 import { RootStackScreen } from './RootScreen.routes';
-import { DrawerNavigator } from './DrawerNavigator.routes';
+import { HomeStackNavigator } from './HomeStackNavigator.routes';
 import { useAuth } from '../hooks/authContext';
 
 export const Routes = () => {
-  const { data, isLoading, loginValidation } = useAuth();
-  console.log(loginValidation);
+  const { data, isLoading, validate } = useAuth();
 
   if (isLoading) {
     return (
@@ -17,5 +16,5 @@ export const Routes = () => {
       </View>
     );
   }
-  return loginValidation ? <DrawerNavigator /> : <RootStackScreen />;
+  return validate ? <HomeStackNavigator /> : <RootStackScreen />;
 };

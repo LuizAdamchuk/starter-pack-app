@@ -3,6 +3,8 @@ import React from 'react';
 import { View, Text, StyleSheet, Button } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 
+import { styles } from './style';
+
 export const Home = () => {
   const navigation = useNavigation();
   return (
@@ -15,11 +17,3 @@ export const Home = () => {
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});

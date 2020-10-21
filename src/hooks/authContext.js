@@ -6,44 +6,80 @@ import React, {
   useContext,
 } from 'react';
 
+import { api } from '../services/api';
+import { EMAIL_KEY, TOKEN_KEY } from '../constants/Keys';
+import AsyncStorage from '@react-native-community/async-storage';
+
 export const AuthContext = createContext();
 
-function InitialData() {
-  return {
-    email: '',
-    token: '',
-  };
-}
-
 export const AuthProvider = ({ children }) => {
-  const [data, setData] = useState(InitialData);
+  const [data, setData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
-  const [loginValidation, setLoginValidation] = useState(false);
+  const [validate, setValidate] = useState(false);
 
   useEffect(() => {
-    setTimeout(() => {
+    async function loadStoragedDate() {
+      const [token, user] = await AsyncStorage.multiGet([TOKEN_KEY, EMAIL_KEY]);
+
+      if (token[1] !== null && user[1] !== null) {
+        api.defaults.headers.authorization = `Bearer ${token[1]}`;
+
+        setData({ token: token[1], user: JSON.parse(user[1]) });
+        setValidate(true);
+        setIsLoading(false);
+
+        return;
+      }
+      setData({});
       setIsLoading(false);
-    }, 1000);
+      setValidate(false);
+    }
+    loadStoragedDate();
   }, []);
 
-  const signIn = useCallback(({ email, password }) => {
-    console.log(email, password);
-    if (email === 'teste@teste.com' && password === '123456') {
-      setData({ email: email, token: '12345' });
-      setLoginValidation(true);
-      return;
-    } else {
-      return console.log('DadosInvalidos');
+  const signIn = useCallback(async ({ email, password }) => {
+    try {
+      console.log(email, password);
+      const response = await api.post('auth/local', {
+        identifier: email,
+        password,
+      });
+
+      const { jwt, user } = response.data;
+
+      await AsyncStorage.multiSet([
+        [TOKEN_KEY, jwt],
+        [EMAIL_KEY, JSON.stringify(user.email)],
+      ]),
+        (api.defaults.headers.authorization = `Bearer ${jwt}`);
+      setValidate(true);
+
+      return setData({ jwt, user });
+    } catch (error) {
+      return error;
     }
   }, []);
 
-  const signOut = useCallback(() => {
-    setLoginValidation(false);
+  const signUp = useCallback(async user => {
+    try {
+      const res = await api.post('auth/local/register', user);
+      return res;
+    } catch (error) {
+      return error;
+    }
+  }, []);
+
+  const signOut = useCallback(async () => {
+    await AsyncStorage.multiRemove([TOKEN_KEY, EMAIL_KEY]);
+
+    setValidate(false);
+
+    return setData({});
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ data, isLoading, signIn, loginValidation, signOut }}
+      value={{ data, isLoading, validate, signIn, signUp, signOut }}
     >
       {children}
     </AuthContext.Provider>
